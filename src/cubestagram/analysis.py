@@ -32,7 +32,10 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
         # Update state if the number of cells has not been set
         if any(n is None for n in [state.nx, state.ny, state.nz]):
             state.nx, state.ny, state.nz = decide_number_of_cells(
-                config=config, box_lengths=box_lengths
+                target_lx=config.target_lx,
+                target_ly=config.target_ly,
+                target_lz=config.target_lz,
+                box_lengths=box_lengths,
             )
             # Initialize the output list
             state.density_over_traj = []
@@ -42,8 +45,12 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
         assert state.ny is not None
         assert state.nz is not None
 
+        print(f"{state.nx=}")
+        print(state.ny)
+        print(state.nz)
+
         # Get the number density
-        density_per_frame = partition_pos_into_cells(
+        density_frame = partition_pos_into_cells(
             pos_frame=positions,
             nx=state.nx,
             ny=state.ny,
@@ -51,4 +58,6 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
             box_lengths=list(box_lengths),
         )
 
-        state.density_over_traj.append(density_per_frame)
+        state.density_over_traj.append(density_frame)
+
+    return state
