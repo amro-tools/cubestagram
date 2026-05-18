@@ -38,6 +38,9 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
             state.density_over_traj = []
 
         assert state.density_over_traj is not None
+        assert state.nx is not None
+        assert state.ny is not None
+        assert state.nz is not None
 
         # Get the number density
         density_per_frame = partition_pos_into_cells(
@@ -45,7 +48,7 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
             nx=state.nx,
             ny=state.ny,
             nz=state.nz,
-            box_lengths=box_lengths,
+            box_lengths=list(box_lengths),
         )
 
         state.density_over_traj.append(density_per_frame)

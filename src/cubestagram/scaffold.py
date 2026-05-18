@@ -8,7 +8,7 @@ import numpy as np
 
 @dataclass
 class FrameInfo:
-    positions: npt.ArrayLike
+    positions: npt.NDArray
     box_lengths: tuple[float]
 
 
