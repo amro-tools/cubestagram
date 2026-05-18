@@ -3,6 +3,8 @@ from typing import Generator
 import numpy.typing as npt
 from dataclasses import dataclass
 from cubestagram.util import decide_number_of_cells
+from pathlib import Path
+import numpy as np
 
 
 @dataclass
@@ -18,6 +20,42 @@ class AnalysisState:
     ny: int | None = None
     nz: int | None = None
     density_over_traj: list[npt.ArrayLike] | None = None
+
+    def to_file(self, filename: Path):
+
+        n_frames = (
+            len(self.density_over_traj) if self.density_over_traj is not None else 0
+        )
+
+        kwargs = {"nx": self.nx, "ny": self.ny, "nz": self.nz, "n_frames": n_frames}
+
+        if self.density_over_traj is not None:
+            kwargs.update(
+                {
+                    f"density_over_traj_{i}": dens
+                    for i, dens in enumerate(self.density_over_traj)
+                }
+            )
+
+        np.savez_compressed(filename, **kwargs)
+
+    @staticmethod
+    def from_file(filename: Path):
+        data = np.load(filename)
+
+        if data["n_frames"] == 0:
+            density_over_traj = None
+        else:
+            density_over_traj = [
+                data[f"density_over_traj_{i}"] for i in range(data["n_frames"])
+            ]
+
+        return AnalysisState(
+            nx=data["nx"],
+            ny=data["ny"],
+            nz=data["nz"],
+            density_over_traj=density_over_traj,
+        )
 
 
 def analyze(frame_provider: Generator[FrameInfo], config: Config):
