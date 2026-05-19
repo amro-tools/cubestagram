@@ -12,22 +12,19 @@ class FrameInfo:
     box_lengths: tuple[float]
 
 
-# @njit
+@njit
 def partition_pos_into_cells(
     pos_frame: npt.NDArray, nx: int, ny: int, nz: int, box_lengths: list[float]
-) -> npt.ArrayLike:
+) -> tuple[npt.ArrayLike, npt.ArrayLike]:
     assert len(box_lengths) == 3
 
     output_density_frame = np.zeros((nx, ny, nz), dtype=np.int32)
+    output_number_frame = np.zeros((nx, ny, nz), dtype=np.int32)
 
     # Cell lengths
     cell_lx = box_lengths[0] / nx
     cell_ly = box_lengths[1] / ny
     cell_lz = box_lengths[2] / nz
-
-    print(f"{cell_lx=}")
-    print(f"{cell_ly=}")
-    print(f"{cell_lz=}")
 
     # each atom
     for i_pos in pos_frame:
@@ -41,5 +38,6 @@ def partition_pos_into_cells(
         cell_index_z = int(i_pos[2] / cell_lz)
 
         output_density_frame[cell_index_x, cell_index_y, cell_index_z] += 1
+        output_number_frame[cell_index_x, cell_index_y, cell_index_z] += 1
 
-    return output_density_frame
+    return output_density_frame, output_number_frame

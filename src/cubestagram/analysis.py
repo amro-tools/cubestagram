@@ -19,21 +19,32 @@ class AnalysisState:
     nx: int | None = None
     ny: int | None = None
     nz: int | None = None
-    density_over_traj: list[npt.ArrayLike] | None = None
+    density_over_traj: list[npt.ArrayLike] | None = None  # mass density
+    number_over_traj: list[npt.ArrayLike] | None = None  # number density
+    n_frames: int = 0
 
     def to_file(self, filename: Path):
 
-        n_frames = (
-            len(self.density_over_traj) if self.density_over_traj is not None else 0
-        )
-
-        kwargs = {"nx": self.nx, "ny": self.ny, "nz": self.nz, "n_frames": n_frames}
+        kwargs = {
+            "nx": self.nx,
+            "ny": self.ny,
+            "nz": self.nz,
+            "n_frames": self.n_frames,
+        }
 
         if self.density_over_traj is not None:
             kwargs.update(
                 {
                     f"density_over_traj_{i}": dens
                     for i, dens in enumerate(self.density_over_traj)
+                }
+            )
+
+        if self.number_over_traj is not None:
+            kwargs.update(
+                {
+                    f"number_over_traj_{i}": dens
+                    for i, dens in enumerate(self.number_over_traj)
                 }
             )
 
@@ -45,9 +56,13 @@ class AnalysisState:
 
         if data["n_frames"] == 0:
             density_over_traj = None
+            number_over_traj = None
         else:
             density_over_traj = [
                 data[f"density_over_traj_{i}"] for i in range(data["n_frames"])
+            ]
+            number_over_traj = [
+                data[f"number_over_traj_{i}"] for i in range(data["n_frames"])
             ]
 
         return AnalysisState(
@@ -55,6 +70,8 @@ class AnalysisState:
             ny=data["ny"],
             nz=data["nz"],
             density_over_traj=density_over_traj,
+            number_over_traj=number_over_traj,
+            n_frames=data["n_frames"],
         )
 
 
@@ -66,6 +83,7 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
     for frame_info in frame_provider:
         positions = frame_info.positions
         box_lengths = frame_info.box_lengths
+        state.n_frames += 1
 
         # Update state if the number of cells has not been set
         if any(n is None for n in [state.nx, state.ny, state.nz]):
@@ -77,18 +95,16 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
             )
             # Initialize the output list
             state.density_over_traj = []
+            state.number_over_traj = []
 
         assert state.density_over_traj is not None
+        assert state.number_over_traj is not None
         assert state.nx is not None
         assert state.ny is not None
         assert state.nz is not None
 
-        print(f"{state.nx=}")
-        print(state.ny)
-        print(state.nz)
-
-        # Get the number density
-        density_frame = partition_pos_into_cells(
+        # Get the number density and mass density
+        density_frame, number_frame = partition_pos_into_cells(
             pos_frame=positions,
             nx=state.nx,
             ny=state.ny,
@@ -97,5 +113,6 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
         )
 
         state.density_over_traj.append(density_frame)
+        state.number_over_traj.append(number_frame)
 
     return state
