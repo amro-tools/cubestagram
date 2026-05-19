@@ -24,3 +24,6 @@ def test_analysis_state():
 
     for d1, d2 in zip(state.density_over_traj, state2.density_over_traj):
         assert np.all(d1 == d2)
+
+    for n1, n2 in zip(state.number_over_traj, state2.number_over_traj):
+        assert np.all(n1 == n2)
