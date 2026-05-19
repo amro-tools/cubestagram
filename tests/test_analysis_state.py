@@ -7,8 +7,16 @@ def test_analysis_state():
     ny = 1
     nz = 2
     test_density = [np.random.uniform(size=(nx, ny, nz))]
+    test_number = [np.random.uniform(size=(nx, ny, nz))]
 
-    state = AnalysisState(nx, ny, nz, density_over_traj=test_density)
+    state = AnalysisState(
+        nx,
+        ny,
+        nz,
+        n_frames=len(test_density),
+        density_over_traj=test_density,
+        number_over_traj=test_number,
+    )
 
     state.to_file("bla.npz")
 
@@ -16,4 +24,3 @@ def test_analysis_state():
 
     for d1, d2 in zip(state.density_over_traj, state2.density_over_traj):
         assert np.all(d1 == d2)
-

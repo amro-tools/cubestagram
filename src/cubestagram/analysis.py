@@ -84,6 +84,7 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
         positions = frame_info.positions
         box_lengths = frame_info.box_lengths
         state.n_frames += 1
+        masses = frame_info.masses
 
         # Update state if the number of cells has not been set
         if any(n is None for n in [state.nx, state.ny, state.nz]):
@@ -110,6 +111,7 @@ def analyze(frame_provider: Generator[FrameInfo], config: Config):
             ny=state.ny,
             nz=state.nz,
             box_lengths=list(box_lengths),
+            masses=masses,
         )
 
         state.density_over_traj.append(density_frame)
